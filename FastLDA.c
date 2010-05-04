@@ -29,7 +29,7 @@
  * Do IN-PLACE z-label LDA Gibbs sample(s)
  * (z, localnw, and localnd will all be modified in-place)
  */
-static PyObject * zLabelGibbs(PyObject *self, PyObject *args, PyObject* keywds)
+static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
@@ -177,7 +177,7 @@ static PyObject * zLabelGibbs(PyObject *self, PyObject *args, PyObject* keywds)
  * Do IN-PLACE Gibbs sample(s)
  * (z, localnw, and localnd will all be modified in-place)
  */
-static PyObject * standardGibbs(PyObject *self, PyObject *args, PyObject* keywds)
+static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
@@ -298,7 +298,7 @@ static PyObject * standardGibbs(PyObject *self, PyObject *args, PyObject* keywds
 /**
  * Online construction of an initial z-sample
  */
-static PyObject * onlineInit(PyObject *self, PyObject *args, PyObject* keywds)
+static PyObject* onlineInit(PyObject* self, PyObject* args, PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
@@ -413,7 +413,8 @@ static PyObject * onlineInit(PyObject *self, PyObject *args, PyObject* keywds)
 /**
  * Construct count matrices nw (W x T) and nd (D x T)
  */
-static PyObject * countMatrices(PyObject *self, PyObject *args, PyObject* keywds)
+static PyObject* countMatrices(PyObject* self, PyObject* args, 
+                                PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
@@ -470,7 +471,7 @@ static PyObject * countMatrices(PyObject *self, PyObject *args, PyObject* keywds
 /**
  * Estimate phi/theta as the mean of the posterior
  */
-static PyObject * estPhiTheta(PyObject *self, PyObject *args, PyObject* keywds)
+static PyObject* estPhiTheta(PyObject* self, PyObject* args, PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
@@ -505,7 +506,8 @@ static PyObject * estPhiTheta(PyObject *self, PyObject *args, PyObject* keywds)
   //
 
   // Pre-calculate some useful sums
-  PyArrayObject* nd_rowsum = (PyArrayObject*) PyArray_Sum(nd,1,PyArray_DOUBLE,NULL);
+  PyArrayObject* nd_rowsum = (PyArrayObject*) PyArray_Sum(nd,1,
+                                                          PyArray_DOUBLE,NULL);
   double alphasum = 0;
   for(t = 0; t < T; t++)
     alphasum += *((double*)PyArray_GETPTR2(alpha,0,t));
@@ -577,7 +579,7 @@ static PyObject * estPhiTheta(PyObject *self, PyObject *args, PyObject* keywds)
 /**
  * Calculate perplexity of (w,d) given (phi,theta)
  */
-static PyObject * perplexity(PyObject *self, PyObject *args, PyObject* keywds)
+static PyObject* perplexity(PyObject* self, PyObject* args, PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
