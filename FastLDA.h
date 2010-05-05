@@ -30,22 +30,26 @@
 #endif
 
 // Do a single IN-PLACE Gibbs sample for standard LDA
-static PyObject* standardGibbs(PyObject *self, PyObject *args, PyObject* keywds);
+static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Do a single IN-PLACE Gibbs sample for z-label LDA
-static PyObject * zLabelGibbs(PyObject *self, PyObject *args, PyObject* keywds);
+static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Online construction of an initial z-sample
-static PyObject* onlineInit(PyObject *self, PyObject *args, PyObject* keywds);
+static PyObject* onlineInit(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Build nw and nd count matrices
-static PyObject * countMatrices(PyObject *self, PyObject *args, PyObject* keywds);
+static PyObject* countMatrices(PyObject* self, PyObject* args, PyObject* keywds);
+
+// 'expected' nw / nd count matrices (for soft/relaxed z-assignments)
+static PyObject* expectedCountMatrices(PyObject* self, PyObject* args, 
+                                       PyObject* keywds);
 
 // Estimate phi and theta from count matrices
-static PyObject * estPhiTheta(PyObject *self, PyObject *args, PyObject* keywds);
+static PyObject* estPhiTheta(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Calculate avg perplexity of (w,d) given (phi,theta)
-static PyObject * perplexity(PyObject *self, PyObject *args, PyObject* keywds);
+static PyObject* perplexity(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Multinomial sampling function
 static int mult_sample(double* vals, double sum);

@@ -39,7 +39,7 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
                            
   // Required args
   //
-  PyObject* zlabel; // List of (weight, ok Set) Tuples or None
+  PyObject* zlabel; // List of None / [(weight, ok Set) Tuples]
   PyArrayObject* w; // NumPyArray of words
   PyArrayObject* d; // NumPyArray of doc indices
   PyArrayObject* z; // NumPyArray of topic assignments
@@ -110,19 +110,33 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
           double norm_sum = 0;
 
           // Is there a z-label for this index?
+          int zli;
           int hasZL = 0;
           if(PyList_GetItem(zlabel,i) != Py_None)
             {
+              // Record that we have z-label(s) for this index 
               hasZL = 1;
-              PyObject* zltuple = PyList_GetItem(zlabel,i);
-              double weight = PyFloat_AsDouble(PyTuple_GetItem(zltuple,0));
-              PyObject* okset = PyTuple_GetItem(zltuple,1);
+              // Entry should be List of (weight,okset) Tuples 
+              PyObject* zlList = PyList_GetItem(zlabel,i);
+              Py_ssize_t zlsize = PyList_Size(zlList);
+              // Init weights to 0
               for(j = 0; j < T; j++)
                 {
-                  if(PySet_Contains(okset,PyInt_FromLong(j)))
-                    zlweights[j] = weight;                    
-                  else
                     zlweights[j] = 0;
+                }
+              // Add weight contributions for each z-label
+              for(zli = 0; zli < zlsize; zli++)
+                {
+                  PyObject* zltuple = PyList_GetItem(zlList,zli);
+                  double weight = PyFloat_AsDouble(PyTuple_GetItem(zltuple,0));
+                  PyObject* okset = PyTuple_GetItem(zltuple,1);
+                  for(j = 0; j < T; j++)
+                    {
+                      if(PySet_Contains(okset,PyInt_FromLong(j)))
+                        {
+                          zlweights[j] += weight;
+                        }
+                    }
                 }
             }
 
@@ -170,6 +184,9 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   Py_DECREF(globalnw_colsum);
 
   // All changes done in-place on z and count matrices
+  // (but need to INCREF Py_None, since caller gets a Py_None
+  // which will be DECREF'ed when they're done with it...)
+  Py_INCREF(Py_None); 
   return Py_None;  
 }
 
@@ -291,6 +308,9 @@ static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   Py_DECREF(globalnw_colsum);
 
   // All changes done in-place on z and count matrices
+  // (but need to INCREF Py_None, since caller gets a Py_None
+  // which will be DECREF'ed when they're done with it...)
+  Py_INCREF(Py_None); 
   return Py_None;
 }
 
@@ -462,6 +482,72 @@ static PyObject* countMatrices(PyObject* self, PyObject* args,
 
       (*((int*)PyArray_GETPTR2(nw,wi,zi)))++;
       (*((int*)PyArray_GETPTR2(nd,di,zi)))++;
+    }
+
+  // Return *without* INCREFing (caller now holds reference)
+  return Py_BuildValue("NN",nw,nd);
+}
+
+/**
+ * Construct 'expected' count matrices nw (W x T) and nd (D x T)
+ * for the case where we have relaxed/probabilistic/soft z-assign
+ */
+static PyObject* expectedCountMatrices(PyObject* self, PyObject* args, 
+                                       PyObject* keywds)
+{
+  // Null-terminated list of arg keywords
+  //
+  static char *kwlist[] = {"w","W","d","D","z","T",NULL};
+                           
+  // Required args
+  //
+  PyArrayObject* w; // NumPyArray of words
+  int W; // vocab size
+  PyArrayObject* d; // NumPyArray of doc indices
+  int D; // number of docs
+  PyArrayObject* z; // N x T NumPyArray of *soft* topic assignments
+  int T; // number of topics
+
+  // Parse function args
+  //
+  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!iO!iO!i",kwlist,
+                                  &PyArray_Type,&w,&W,
+                                  &PyArray_Type,&d,&D,
+                                  &PyArray_Type,&z,&T))
+    // ERROR - bad args
+    return NULL;
+
+  // Construct count matrices
+  npy_intp* nwdims = malloc(sizeof(npy_intp)*2);
+  nwdims[0] = W;
+  nwdims[1] = T;
+  PyArrayObject* nw = (PyArrayObject*) PyArray_ZEROS(2,nwdims,
+                                                     PyArray_DOUBLE,0);
+  free(nwdims);
+
+  npy_intp* nddims = malloc(sizeof(npy_intp)*2);
+  nddims[0] = D;
+  nddims[1] = T;
+  PyArrayObject* nd =  (PyArrayObject*) PyArray_ZEROS(2,nddims,
+                                                      PyArray_DOUBLE,0);
+  // Count for each word in the corpus
+  int N = PyArray_DIM(w,0);
+  int i,di,wi,zi;
+  double pzi;
+  for(i = 0; i < N; i++) 
+    {
+      // doc/word for this index
+      di = *((int*)PyArray_GETPTR1(d,i));
+      wi = *((int*)PyArray_GETPTR1(w,i));
+      // count weighted/relaxed values for each topic
+      for(zi = 0; zi < T; zi++)
+        {          
+          // soft assignment value for this index-topic
+          pzi = *((double*)PyArray_GETPTR2(z,i,zi));
+          // add to expected counts
+          (*((double*)PyArray_GETPTR2(nw,wi,zi))) += pzi;
+          (*((double*)PyArray_GETPTR2(nd,di,zi))) += pzi;
+        }
     }
 
   // Return *without* INCREFing (caller now holds reference)
@@ -657,6 +743,9 @@ PyMethodDef methods[] =
      "Take a single in-place standard LDA Gibbs sample"},
     {"onlineInit", (PyCFunction) onlineInit, 
      METH_KEYWORDS, "Do online LDA z-initialization"},
+    {"expectedCountMatrices", (PyCFunction) expectedCountMatrices, 
+     METH_KEYWORDS, 
+     "Construct 'expected' nw/nd count matrices from relaxed z-assignments"},
     {"countMatrices", (PyCFunction) countMatrices, 
      METH_KEYWORDS, "Construct nw/nd count matrices"},
     {"estPhiTheta", (PyCFunction) estPhiTheta,
