@@ -35,8 +35,8 @@
 
 // Minimum values for phi/theta MAP estimates 
 // (to avoid numerical issues with 0 values)
-#define MIN_PHI 0.000001
-#define MIN_THETA 0.000001
+#define MIN_PHI 0.0001
+#define MIN_THETA 0.0001
 
 // Do a single IN-PLACE Gibbs sample for standard LDA
 static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds);
