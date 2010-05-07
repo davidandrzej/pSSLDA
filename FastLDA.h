@@ -29,6 +29,15 @@
 #define max(a,b) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
+#ifndef min
+#define min(a,b) ( ((a) < (b)) ? (a) : (b) )
+#endif
+
+// Minimum values for phi/theta MAP estimates 
+// (to avoid numerical issues with 0 values)
+#define MIN_PHI 0.000001
+#define MIN_THETA 0.000001
+
 // Do a single IN-PLACE Gibbs sample for standard LDA
 static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds);
 
@@ -45,8 +54,11 @@ static PyObject* countMatrices(PyObject* self, PyObject* args, PyObject* keywds)
 static PyObject* expectedCountMatrices(PyObject* self, PyObject* args, 
                                        PyObject* keywds);
 
-// Estimate phi and theta from count matrices
+// Estimate phi and theta from count matrices (mean of posterior)
 static PyObject* estPhiTheta(PyObject* self, PyObject* args, PyObject* keywds);
+
+// MAP estimate of phi and theta from count matrices
+static PyObject* mapPhiTheta(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Calculate avg perplexity of (w,d) given (phi,theta)
 static PyObject* perplexity(PyObject* self, PyObject* args, PyObject* keywds);

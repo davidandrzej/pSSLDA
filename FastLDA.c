@@ -661,6 +661,110 @@ static PyObject* estPhiTheta(PyObject* self, PyObject* args, PyObject* keywds)
   return Py_BuildValue("NN",phi,theta);
 }
 
+/**
+ * MAP estimate of phi/theta from expected count matrices
+ * (note that expected count matrices must be double/float, not int)
+ *
+ * Also, true MAP estimate would be 0 for (count + hyperparam) < 1, but
+ * for numerial sanity we bound away from 0 by MIN_PHI / MIN_THETA
+ */
+static PyObject* mapPhiTheta(PyObject* self, PyObject* args, PyObject* keywds)
+{
+  // Null-terminated list of arg keywords
+  //
+  static char *kwlist[] = {"nw","nd","alpha","beta",NULL};
+                           
+  // Required args
+  //
+  PyArrayObject* nw; // NumPyArray of *expected* words-topic counts
+  PyArrayObject* nd; // NumPyArray of *expected* doc-topic counts
+  PyArrayObject* alpha; // NumPyArray 
+  PyArrayObject* beta; // NumPyArray 
+
+  // Parse function args
+  //
+  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!O!O!O!",kwlist,
+                                  &PyArray_Type,&nw,
+                                  &PyArray_Type,&nd,
+                                  &PyArray_Type,&alpha,
+                                  &PyArray_Type,&beta))
+
+    // ERROR - bad args
+    return NULL;
+
+  // Get dimensionality info
+  int T = PyArray_DIM(nw,1);
+  int W = PyArray_DIM(nw,0);
+  int D = PyArray_DIM(nd,0);
+  int d,t,w;    
+
+  //  
+  // theta
+  //
+
+  // Construct theta
+  npy_intp* tdims = malloc(sizeof(npy_intp)*2);
+  tdims[0] = D;
+  tdims[1] = T;
+  PyArrayObject* theta = (PyArrayObject*) 
+    PyArray_ZEROS(2,tdims,PyArray_DOUBLE,0);
+  free(tdims);
+
+  // Calculate theta
+  for(d = 0; d < D; d++) 
+    {
+      double normsum = 0;
+      for(t = 0; t < T; t++)
+        {
+          double alpha_t = *((double*)PyArray_GETPTR2(alpha,0,t));
+          double nd_dt = *((double*)PyArray_GETPTR2(nd,d,t));
+          // Calc and assign theta entry
+          double val = max(MIN_THETA, alpha_t + nd_dt - 1);
+          *((double*)PyArray_GETPTR2(theta,d,t)) = val;
+          normsum += val;
+        }
+      // normalize
+      for(t = 0; t < T; t++)
+        {
+          *((double*)PyArray_GETPTR2(theta,d,t)) /= normsum;
+        }
+    }
+
+  //
+  // phi
+  //
+
+  // Construct phi
+  npy_intp* pdims = malloc(sizeof(npy_intp)*2);
+  pdims[0] = T;
+  pdims[1] = W;
+  PyArrayObject* phi = (PyArrayObject*) 
+    PyArray_ZEROS(2,pdims,PyArray_DOUBLE,0);
+  free(pdims);
+
+  // Calculate phi
+  for(t = 0; t < T; t++) 
+    {
+      double normsum = 0;
+      for(w = 0; w < W; w++) 
+        {
+          double beta_tw = *((double*)PyArray_GETPTR2(beta,t,w));
+          double nw_wt = *((double*)PyArray_GETPTR2(nw,w,t));
+          // Calc and assign phi entry
+          double val = max(MIN_PHI, beta_tw + nw_wt - 1);
+          *((double*)PyArray_GETPTR2(phi,t,w)) = val;
+          normsum += val;
+        }
+      // normalize
+      for(w = 0; w < W; w++) 
+        {
+          *((double*)PyArray_GETPTR2(phi,t,w)) /= normsum;
+        }
+    }
+
+  // Return *without* INCREFing (caller now holds reference)
+  return Py_BuildValue("NN",phi,theta);
+}
 
 /**
  * Calculate perplexity of (w,d) given (phi,theta)
@@ -748,6 +852,8 @@ PyMethodDef methods[] =
      "Construct 'expected' nw/nd count matrices from relaxed z-assignments"},
     {"countMatrices", (PyCFunction) countMatrices, 
      METH_KEYWORDS, "Construct nw/nd count matrices"},
+    {"mapPhiTheta", (PyCFunction) mapPhiTheta,
+     METH_KEYWORDS, "MAP estimate of phi/theta from expected count matrices"},
     {"estPhiTheta", (PyCFunction) estPhiTheta,
      METH_KEYWORDS, "Estimate phi/theta from count matrices"},
     {"perplexity", (PyCFunction) perplexity,
