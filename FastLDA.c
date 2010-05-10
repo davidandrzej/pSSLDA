@@ -434,7 +434,7 @@ static PyObject* onlineInit(PyObject* self, PyObject* args, PyObject* keywds)
  * Construct count matrices nw (W x T) and nd (D x T)
  */
 static PyObject* countMatrices(PyObject* self, PyObject* args, 
-                                PyObject* keywds)
+                               PyObject* keywds)
 {
   // Null-terminated list of arg keywords
   //
@@ -457,7 +457,25 @@ static PyObject* countMatrices(PyObject* self, PyObject* args,
                                   &PyArray_Type,&z,&T))
     // ERROR - bad args
     return NULL;
+  
+  // counts will hold result (pointer to size-2 array of PyObject pointers)
+  PyArrayObject** counts = malloc(sizeof(PyArrayObject*) * 2);
+  _countMatrices(w,W,d,D,z,T,&counts);
+  // Construct return value *without* INCREFing (caller now holds references)
+  PyArrayObject* nw = counts[0];
+  PyArrayObject* nd = counts[1];
+  PyObject* retval = Py_BuildValue("NN",nw,nd);
+  // Cleanup and return 
+  free(counts);
+  return retval;
+}
 
+/**
+ * INTERNAL C VERSION
+ */
+static int _countMatrices(PyArrayObject* w, int W, PyArrayObject* d, int D,
+                          PyArrayObject* z, int T, PyArrayObject*** counts)
+{
   // Construct count matrices
   npy_intp* nwdims = malloc(sizeof(npy_intp)*2);
   nwdims[0] = W;
@@ -484,8 +502,10 @@ static PyObject* countMatrices(PyObject* self, PyObject* args,
       (*((int*)PyArray_GETPTR2(nd,di,zi)))++;
     }
 
-  // Return *without* INCREFing (caller now holds reference)
-  return Py_BuildValue("NN",nw,nd);
+  // Put values in array pointed to by counts
+  (*counts)[0] = nw;
+  (*counts)[1] = nd;  
+  return OK;
 }
 
 /**
@@ -692,6 +712,25 @@ static PyObject* mapPhiTheta(PyObject* self, PyObject* args, PyObject* keywds)
     // ERROR - bad args
     return NULL;
 
+  // phitheta will hold result (pointer to size-2 array of PyObject pointers)
+  PyArrayObject** phitheta = malloc(sizeof(PyArrayObject*) * 2);
+  _mapPhiTheta(nw,nd,alpha,beta,&phitheta);
+  PyArrayObject* phi = phitheta[0];
+  PyArrayObject* theta = phitheta[1];
+  // Build result *without* INCREFing (caller now holds reference)
+  PyObject* retval = Py_BuildValue("NN",phi,theta);
+  // Cleanup and return
+  free(phitheta);
+  return retval;
+}
+
+/**
+ * INTERNAL C VERSION
+ */
+static int _mapPhiTheta(PyArrayObject* nw,  PyArrayObject* nd,
+                        PyArrayObject* alpha, PyArrayObject* beta,
+                        PyArrayObject*** phitheta)
+{
   // Get dimensionality info
   int T = PyArray_DIM(nw,1);
   int W = PyArray_DIM(nw,0);
@@ -762,8 +801,145 @@ static PyObject* mapPhiTheta(PyObject* self, PyObject* args, PyObject* keywds)
         }
     }
 
-  // Return *without* INCREFing (caller now holds reference)
-  return Py_BuildValue("NN",phi,theta);
+  // Return as C array of PyArrayObject pointers
+  (*phitheta)[0] = phi;
+  (*phitheta)[1] = theta;
+  return OK;
+}
+
+/**
+ * Calculate LDA logike of (z,phi,theta) given (w,alpha,beta)
+ */
+static PyObject* ldaLoglike(PyObject* self, PyObject* args, PyObject* keywds)
+{
+  // Null-terminated list of arg keywords
+  //
+  static char *kwlist[] = {"w","d","z","phi","theta","alpha","beta",NULL};
+                           
+  // Required args
+  //
+  PyArrayObject* w; // NumPyArray of words
+  PyArrayObject* d; // NumPyArray of doc indices
+  PyArrayObject* z; // NumPyArray of topic assignments
+  PyArrayObject* phi; // NumPyArray of topic-word probs
+  PyArrayObject* theta; // NumPyArray of doc-topic probs
+  PyArrayObject* alpha; // NumPyArray of doc-topic probs
+  PyArrayObject* beta; // NumPyArray of doc-topic probs
+
+  // Parse function args
+  //
+  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!O!O!O!O!O!O!",kwlist,
+                                  &PyArray_Type,&w,
+                                  &PyArray_Type,&d,
+                                  &PyArray_Type,&z,
+                                  &PyArray_Type,&phi,
+                                  &PyArray_Type,&theta,
+                                  &PyArray_Type,&alpha,
+                                  &PyArray_Type,&beta))
+    // ERROR - bad args
+    return NULL;
+  
+  // Call internal C method
+  double ll = _ldaLoglike(w,d,z,phi,theta,alpha,beta);
+  // Package return value
+  return Py_BuildValue("d",ll);
+}
+
+static double _ldaLoglike(PyArrayObject* w, PyArrayObject* d,
+                          PyArrayObject* z,
+                          PyArrayObject* phi, PyArrayObject* theta,
+                          PyArrayObject* alpha, PyArrayObject*beta)
+{
+  // Get some dimensionalities
+  int T = PyArray_DIM(phi,0);
+  int W = PyArray_DIM(phi,1);
+  int D = PyArray_DIM(theta,0);
+
+  // Get count matrices
+  PyArrayObject** counts = malloc(sizeof(PyArrayObject*) * 2);
+  _countMatrices(w,W,d,D,z,T,&counts);
+  PyArrayObject* nw = counts[0];
+  PyArrayObject* nd = counts[1];
+  free(counts);
+
+  double ll = 0; 
+  
+  
+
+  // DOES NOT WORK - NO EASY WAY TO GET A 
+  // NUMPY ARRAY 'SLICE' FROM C...?
+  
+  /* int ti,di; */
+  /* // Topic-word Dirichlet */
+  /* for(ti = 0; ti < T; ti++) */
+  /*   { */
+      
+  /*   } */
+
+  /* // Topic-word multinomial */
+  /* for(ti = 0; ti < T; ti++) */
+  /*   { */
+
+  /*   } */
+
+  /* // Doc-topic Dirichlet */
+  /* for(di = 0; di < D; di++) */
+  /*   { */
+
+  /*   } */
+
+  /* // Doc-topic multinomial */
+  /* for(di = 0; di < D; di++) */
+  /*   { */
+
+  /*   } */
+  
+
+  // Cleanup and return
+  Py_DECREF(nw);
+  Py_DECREF(nd);
+  return ll;
+}
+
+
+/**
+ * Multinomial log-likelihood of counts given multinomial parameters theta
+ */
+static double _logMult(PyArrayObject* counts, PyArrayObject* theta)
+{
+  int i;
+  double ll = 0;
+  for(i = 0; i < PyArray_DIM(counts,0); i++)
+    ll += *((int*)PyArray_GETPTR1(counts,i)) * 
+      log(*((double*)PyArray_GETPTR1(theta,i)));
+  return ll;
+}
+
+/**
+ * Dirichlet log-likelihood of multinomial params 
+ * theta given hyperparameters alpha
+ */
+static double _logDir(PyArrayObject* theta, PyArrayObject* alpha)
+{
+  double ll = 0; 
+  int i;
+  double asum = 0;
+
+  // Normalization term denominator
+  for(i = 0; i < PyArray_DIM(alpha,0); i++)
+    {
+      asum += *((double*)PyArray_GETPTR1(alpha,i));
+      ll -= lgamma(*((double*)PyArray_GETPTR1(alpha,i)));
+    }
+  // Normalization term numerator
+  ll += lgamma(asum);
+  // theta^(alpha-1) terms
+  for(i = 0; i < PyArray_DIM(alpha,0); i++)
+    {
+      ll += (*((double*)PyArray_GETPTR1(alpha,i)) - 1) * 
+        log(*((double*)PyArray_GETPTR1(theta,i)));
+    }
+  return ll;
 }
 
 /**
@@ -791,7 +967,7 @@ static PyObject* perplexity(PyObject* self, PyObject* args, PyObject* keywds)
                                   &PyArray_Type,&theta))
     // ERROR - bad args
     return NULL;
-
+  
   // Get dimensionalities
   int T = PyArray_DIM(phi,0);
   int N = PyArray_DIM(w,0);
@@ -858,6 +1034,8 @@ PyMethodDef methods[] =
      METH_KEYWORDS, "Estimate phi/theta from count matrices"},
     {"perplexity", (PyCFunction) perplexity,
      METH_KEYWORDS, "Calc per-word perplexity given phi/theta"},
+    {"ldaLoglike", (PyCFunction) ldaLoglike,
+     METH_KEYWORDS, "Calc LDA logike of (z,phi,theta) given (w,alpha,beta)"},
     {NULL, NULL, 0, NULL}  // Is a 'sentinel' (?)
   };
 

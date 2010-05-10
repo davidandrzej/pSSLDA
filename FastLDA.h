@@ -33,6 +33,10 @@
 #define min(a,b) ( ((a) < (b)) ? (a) : (b) )
 #endif
 
+// Function return codes
+#define OK 0
+#define FAIL 1
+
 // Minimum values for phi/theta MAP estimates 
 // (to avoid numerical issues with 0 values)
 #define MIN_PHI 0.0001
@@ -49,6 +53,8 @@ static PyObject* onlineInit(PyObject* self, PyObject* args, PyObject* keywds);
 
 // Build nw and nd count matrices
 static PyObject* countMatrices(PyObject* self, PyObject* args, PyObject* keywds);
+static int _countMatrices(PyArrayObject* w, int W, PyArrayObject* d, int D,
+                          PyArrayObject* z, int T, PyArrayObject*** counts);
 
 // 'expected' nw / nd count matrices (for soft/relaxed z-assignments)
 static PyObject* expectedCountMatrices(PyObject* self, PyObject* args, 
@@ -59,9 +65,20 @@ static PyObject* estPhiTheta(PyObject* self, PyObject* args, PyObject* keywds);
 
 // MAP estimate of phi and theta from count matrices
 static PyObject* mapPhiTheta(PyObject* self, PyObject* args, PyObject* keywds);
+static int _mapPhiTheta(PyArrayObject* nw,  PyArrayObject* nd,
+                        PyArrayObject* alpha, PyArrayObject* beta,
+                        PyArrayObject*** phitheta);
 
 // Calculate avg perplexity of (w,d) given (phi,theta)
 static PyObject* perplexity(PyObject* self, PyObject* args, PyObject* keywds);
+
+// Calculate LDA logike of (z,phi,theta) given (w,alpha,beta)
+static PyObject* ldaLoglike(PyObject* self, PyObject* args, PyObject* keywds);
+static double _ldaLoglike(PyArrayObject* w, PyArrayObject* d, PyArrayObject* z,
+                          PyArrayObject* phi, PyArrayObject* theta,
+                          PyArrayObject* alpha, PyArrayObject*beta);
+static double _logDir(PyArrayObject* theta, PyArrayObject* alpha);
+static double _logMult(PyArrayObject* counts, PyArrayObject* theta);
 
 // Multinomial sampling function
 static int mult_sample(double* vals, double sum);
