@@ -227,13 +227,13 @@ class Sampler(MP.Process):
             self.randseed += 1
             recval = self.sampconn.recv()
             if(isinstance(recval,str) and recval == 'GETZ'):
-                # If string, assume request for z vector
+                # Request for z-vector
                 self.sampconn.send(self.z.dumps())
             elif(isinstance(recval,str) and recval == 'KILL'):
                 # We're done!  Shut it down...
                 break
             else:
-                # Else assume it is globalnd, run inference
+                # Else assume we have been passed globalnd, run inference
                 globalnw = NP.loads(recval)
                 if(self.zlabels == None):
                     # Standard LDA
