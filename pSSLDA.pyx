@@ -2,7 +2,6 @@
 Approximate Distributed (AD) [2] inference for LDA with topic-in-set
 knowledge (z-label LDA) [1].
 
-
 [1] z-label LDA
 
 David Andrzejewski and Xiaojin Zhu,
