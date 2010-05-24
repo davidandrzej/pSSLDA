@@ -4,7 +4,7 @@ knowledge (z-label LDA) [1].
 
 [1] z-label LDA
 
-David Andrzejewski and Xiaojin Zhu,
+David Andrzejewski and Xiaojin Zhu
 Latent Dirichlet Allocation with Topic-in-Set Knowledge, NAACL-SSLNLP 2009
     
 [2] Approximate Distributed Latent Dirichlet Allocation (AD-LDA)
@@ -78,7 +78,7 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
 
     If reportname != None
     -every <reportintrval> samples dump full z-sample out to disk     
-    -reportname should contain '%d' which will take sample number
+    -reportname string should contain '%d' which will take sample number
 
     If zlabels != None, do z-label LDA inference
     """
@@ -112,7 +112,7 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
     pindices = []
     for p in range(P):        
         pindices.append(idxpart[:,p].nonzero()[0])
-    # WITHIN each partition need to renumber documents 0,...,Dp-1
+    # WITHIN each partition we need to renumber documents 0,...,Dp-1
     print 'Create re-numbered doc vectors for each partition'
     cdef NP.ndarray[NP.int_t, ndim=1] pidx    
     renumdocs = []

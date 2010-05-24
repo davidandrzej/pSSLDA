@@ -5,21 +5,26 @@ David Andrzejewski (andrzeje@cs.wisc.edu)
 Department of Computer Sciences
 University of Wisconsin-Madison, USA
 
-This software implements an extension of LDA [2] which allows the use
-of "topic-in-set knowledge", or z-labels [1].  This allows the user to
-supply (possibly noisy) labels or set-labels for specific latent topic
-z-values. The inference method is Approximate Distributed (AD) [3]
-infernece for LDA, and the code can also be used to do "standard" LDA,
-as in [3] (see example code).
 
-Inference is implemented with Python extension modules using C and
-Cython.
+
+This software implements an extension of Latent Dirichlet Allocation
+(LDA) [2] which includes "topic-in-set knowledge", or z-labels [1],
+allowing the user to supply (possibly noisy) labels for specific
+latent topic assignments.  Parallelized inference is done by the
+Approximate Distributed (AD) [3] collapsed Gibbs sampling algorithm.
+
+This code can also be used to do parallel inference for "standard"
+LDA.
+
+The implementation consists of Python extension modules written in C
+and Cython.
+
 
 
 BUILD/INSTALL
 
-Building this module requires installation of Python, NumPy, Cython,
-and a C compiler.  From the command-line, do:
+Building this module requires Python, NumPy, Cython, and a C compiler.
+From the command-line, do:
 
 % python setup.py install
 
@@ -28,11 +33,12 @@ you may need to make the appropriate changes in setup.py)
 
 You can then test the installation with:
 
-% python test/testZLabelLDA.py -v
+% python test/testInfer.py -v
 
 There is also a simple example scipt showing how to use zhLDA:
 
-% python example.py
+% python example/example.py
+
 
 
 LOCAL INSTALL
@@ -53,17 +59,21 @@ our example this might involve adding something like the line:
 setenv PYTHONPATH ~/local/lib/python2.5/site-packages
 
 
+
 HOW TO USE
 
 The commenting in the example.py script explains the meanings and
-types of all input and return arguments.  For more detailed examples
-of good/bad inputs, you can examine the tests in test/testZLabelLDA.py
+types of all input and return arguments.  The P parameter determines
+how many parallel sampling processes to run - using a value larger
+than the number of available cores is probably inadvisable.
+
 
 
 LICENSE
 
 This software is open-source, released under the terms of the
 simplified BSD license (see LICENSE).
+
 
 
 REFERENCES

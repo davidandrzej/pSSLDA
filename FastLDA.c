@@ -39,7 +39,7 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
                            
   // Required args
   //
-  PyObject* zlabel; // List of None / [(weight, ok Set) Tuples]
+  PyObject* zlabel; // List of either: None, or dim-T NumPy weight array
   PyArrayObject* w; // NumPyArray of words
   PyArrayObject* d; // NumPyArray of doc indices
   PyArrayObject* z; // NumPyArray of topic assignments
@@ -87,7 +87,7 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
 
   // Temporary arrays used for sampling
   double* num = malloc(sizeof(double)*T);
-  double* zlweights = malloc(sizeof(double)*T);
+  PyArrayObject* zlweights = NULL;
 
   // Use Gibbs sampling to get a new z
   // sample, one position at a time
@@ -110,34 +110,13 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
           double norm_sum = 0;
 
           // Is there a z-label for this index?
-          int zli;
           int hasZL = 0;
           if(PyList_GetItem(zlabel,i) != Py_None)
             {
               // Record that we have z-label(s) for this index 
               hasZL = 1;
-              // Entry should be List of (weight,okset) Tuples 
-              PyObject* zlList = PyList_GetItem(zlabel,i);
-              Py_ssize_t zlsize = PyList_Size(zlList);
-              // Init weights to 0
-              for(j = 0; j < T; j++)
-                {
-                    zlweights[j] = 0;
-                }
-              // Add weight contributions for each z-label
-              for(zli = 0; zli < zlsize; zli++)
-                {
-                  PyObject* zltuple = PyList_GetItem(zlList,zli);
-                  double weight = PyFloat_AsDouble(PyTuple_GetItem(zltuple,0));
-                  PyObject* okset = PyTuple_GetItem(zltuple,1);
-                  for(j = 0; j < T; j++)
-                    {
-                      if(PySet_Contains(okset,PyInt_FromLong(j)))
-                        {
-                          zlweights[j] += weight;
-                        }
-                    }
-                }
+              // Entry should be a dim-T NumPy array of weights
+              zlweights = (PyArrayObject*) PyList_GetItem(zlabel,i);
             }
 
           // Get un-normalized sampling probabilities for each topic 
@@ -157,7 +136,7 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
 
               // Consider z-label, if applicable
               if(hasZL != 0)
-                  num[j] *= exp(zlweights[j]);
+                num[j] *= exp(*((double*)PyArray_GETPTR1(zlweights,j)));
 
               // Keep running sum
               norm_sum += num[j];
@@ -178,7 +157,6 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
 
   // Memory cleanup
   //
-  free(zlweights);
   free(num);
   Py_DECREF(localnw_colsum);
   Py_DECREF(globalnw_colsum);
@@ -865,8 +843,7 @@ static double _ldaLoglike(PyArrayObject* w, PyArrayObject* d,
   double ll = 0; 
   
   
-
-  // DOES NOT WORK - NO EASY WAY TO GET A 
+  // DOES NOT WORK YET - NO EASY WAY TO GET A 
   // NUMPY ARRAY 'SLICE' FROM C...?
   
   /* int ti,di; */
