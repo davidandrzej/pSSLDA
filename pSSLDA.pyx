@@ -101,8 +101,9 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
     cdef int p
     for p in range(P):
         partdocs.append(NP.where(docassign == p)[0])
+    assert(all([len(pd) > 0 for pd in partdocs]))
     # Get indices associated with each partition
-    # (for each idx (<=N) put a 1 in the col for the partition (<=P))
+    # (for each idx (< N) put a 1 in the col for the partition (< P))
     print 'Getting indices associated with each partition'
     cdef NP.ndarray[NP.int_t, ndim=2] idxpart
     idxpart = NP.zeros((N,P),dtype=NP.int) # N x P binary matrix
