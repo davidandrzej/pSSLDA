@@ -35,7 +35,7 @@ You can then test the installation with:
 
 % python test/testInfer.py -v
 
-There is also a simple example scipt showing how to use zhLDA:
+There is also a simple example scipt showing how to use pSSLDA:
 
 % python example/example.py
 
