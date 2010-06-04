@@ -1,0 +1,7 @@
+include *.h
+include *.pyx
+include *.py
+FastLDA.c
+README
+recursive-include test *.py
+recursive-include example *.py
