@@ -28,14 +28,10 @@ From the command-line, do:
 
 % python setup.py install
 
-(Note that if NumPy or Python are installed to non-standard locations,
-you may need to make the appropriate changes in setup.py)
+(Note that if things are installed to non-standard locations, you may
+need to make the appropriate changes in setup.py)
 
-You can then test the installation with:
-
-% python test/testInfer.py -v
-
-There is also a simple example scipt showing how to use pSSLDA:
+There is a simple example scipt showing how to use pSSLDA:
 
 % python example/example.py
 
@@ -71,8 +67,9 @@ than the number of available cores is probably inadvisable.
 
 LICENSE
 
-This software is open-source, released under the terms of the
-simplified BSD license (see LICENSE).
+This software is open-source, released under the terms of the GNU
+General Public License version 3, or any later version of the GPL (see
+LICENSE).
 
 
 
