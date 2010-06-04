@@ -17,7 +17,7 @@ import FastLDA
 # W = vocabulary size
 
 # Synthetic topics
-phi = NP.array([[0.5, 0.4, 0.05, 0.05],
+phi = NP.array([[0.45, 0.45, 0.05, 0.05],
                [0.05, 0.05, 0.85, 0.05],
                 [0.05, 0.05, 0.05, 0.85]])
 (T, W) = phi.shape
@@ -92,6 +92,7 @@ print ''
 print 'Estimated topics should be similar to ground truth'
 print '(up to a permutation of the rows)'
 print 'enter \'c\' to continue...'
+print ''
 pdb.set_trace()
 
 #
@@ -127,3 +128,4 @@ print '\n'.join(['['+', '.join(['%.2f' % val for val in row]) + ']'
 print ''
 print 'Note that learned topics now obey z-labels'
 print '(even though that \"disagrees\" with data)'
+print ''
