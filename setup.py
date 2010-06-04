@@ -19,7 +19,7 @@ py_mods = []
 
 setup(name = 'pSSLDA',
       description = 'Parallel Semi-Supervised LDA',
-      version = '0.0.0',
+      version = '0.1.0',
       author = 'David Andrzejewski',
       author_email = 'andrzeje@cs.wisc.edu',
       license = 'GNU General Public License (Version 3 or later)',

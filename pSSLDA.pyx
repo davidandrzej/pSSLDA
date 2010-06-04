@@ -1,6 +1,6 @@
 """
-Approximate Distributed (AD) [2] inference for LDA with topic-in-set
-knowledge (z-label LDA) [1].
+Approximate Distributed (AD) [2] parallel inference for LDA with
+topic-in-set knowledge (z-label LDA) [1].
 
 [1] z-label LDA
 
