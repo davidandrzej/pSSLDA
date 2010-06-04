@@ -26,6 +26,10 @@ ctypedef NP.float_t FTYPE_t
 
 import FastLDA as FLDA
 
+# We're only drawing P values from this interval,
+# so does not need to be that large...
+RANDSEED_MAX = 100000
+
 def getZ(pindices,allconn,finalz):
     """
     Re-assemble the full z-vector from each Sampler's individual pieces
@@ -87,7 +91,7 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
     cdef int D = d.max()+1
     cdef int T = beta.shape[0]
     cdef int N = w.shape[0]
-    # Use prev implementation to build up online initialization
+    # Build up online initialization
     cdef NP.ndarray[NP.int_t, ndim=1] z
     if(zinit == None):
         print 'Online z initialization'
@@ -141,6 +145,7 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
                                 for (pidx,rd) in zip(pindices,renumdocs)])
     # Create Sampler processes
     print 'Launching Sampler processes'
+    NPR.seed(randseed)
     (allconn,allsamp) = ([],[])
     for (sampi,(locnw,locnd,pidx,rdocs)) in enumerate(zip(localnws,
                                                           localnds,
@@ -149,14 +154,19 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
         # Connections for duplex communications with Sampler
         (myconn,sampconn) = MP.Pipe()
         allconn.append(myconn)
+        # SUBTLE BUG DANGER!!!
+        # Sampler processes will be incrementing randseed btwn FLDA calls,
+        # therefore we DO NOT want to assign Samplers sequential randseeds
+        # (because subsequent calls to Samplers would "overlap")
+        srandseed = NPR.randint(0, RANDSEED_MAX)
         # Do we have z-labels?
         if(zlabels != None):
             curzl = [zlabels[i] for i in pidx]
             allsamp.append(Sampler(sampconn,w[pidx],rdocs,z[pidx],alpha,beta,
-                                   locnw,locnd,randseed + sampi,curzl))
+                                   locnw,locnd,srandseed,curzl))
         else:
             allsamp.append(Sampler(sampconn,w[pidx],rdocs,z[pidx],alpha,beta,
-                                   locnw,locnd,randseed + sampi))
+                                   locnw,locnd,srandseed))
         # Launch it
         allsamp[-1].start()
     # Init globalnw
