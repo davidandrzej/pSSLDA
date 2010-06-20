@@ -35,7 +35,7 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   //
   static char *kwlist[] = {"zlabels","w","d","z","alpha","beta",
                            "localnw","localnd","globalnw",
-                           "randseed","numsamp",NULL};
+                           "randseed","numsamp","verbose",NULL};
                            
   // Required args
   //
@@ -53,10 +53,11 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   int randseed;
   // Optional
   int numsamp = 1;
+  int verbose = 0;
 
   // Parse function args
   //
-  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!O!O!O!O!O!O!O!O!i|i",kwlist,
+  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!O!O!O!O!O!O!O!O!i|ii",kwlist,
                                   &PyList_Type,&zlabel,
                                   &PyArray_Type,&w,
                                   &PyArray_Type,&d,
@@ -66,7 +67,7 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
                                   &PyArray_Type,&localnw,
                                   &PyArray_Type,&localnd,
                                   &PyArray_Type,&globalnw,
-                                  &randseed,&numsamp))
+                                  &randseed,&numsamp,&verbose))
     // ERROR - bad args
     return NULL;
 
@@ -95,6 +96,8 @@ static PyObject* zLabelGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   int i,j,di,wi,zi,si;
   for (si = 0; si < numsamp; si++)
     {
+      if(verbose != 0)
+        printf("Sample %d of %d\n", si, numsamp);
       for(i = 0; i < N; i++) 
         {
           di = *((int*)PyArray_GETPTR1(d,i));
@@ -178,7 +181,7 @@ static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   //
   static char *kwlist[] = {"w","d","z","alpha","beta",
                            "localnw","localnd","globalnw",
-                           "randseed","numsamp",NULL};
+                           "randseed","numsamp","verbose",NULL};
                            
   // Required args
   //
@@ -195,10 +198,11 @@ static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   int randseed;
   // Optional
   int numsamp = 1;
+  int verbose = 0;
 
   // Parse function args
   //
-  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!O!O!O!O!O!O!O!i|i",kwlist,
+  if(!PyArg_ParseTupleAndKeywords(args,keywds,"O!O!O!O!O!O!O!O!i|ii",kwlist,
                                   &PyArray_Type,&w,
                                   &PyArray_Type,&d,
                                   &PyArray_Type,&z,
@@ -208,7 +212,7 @@ static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds)
                                   &PyArray_Type,&localnd,
                                   &PyArray_Type,&globalnw,
                                   &randseed,             
-                                  &numsamp))
+                                  &numsamp, &verbose))
     // ERROR - bad args
     return NULL;
  
@@ -236,6 +240,8 @@ static PyObject* standardGibbs(PyObject* self, PyObject* args, PyObject* keywds)
   int i,j,di,wi,zi,si;
   for (si = 0; si < numsamp; si++)
     {
+      if(verbose != 0)
+        printf("Sample %d of %d\n", si, numsamp);
       for(i = 0; i < N; i++) 
         {
           di = *((int*)PyArray_GETPTR1(d,i));
