@@ -99,12 +99,20 @@ pdb.set_trace()
 # Now, we add z-labels to *force* words 0 and 1 into separate topics
 # (note that this is different than ground truth)
 #
+labelweight = 5.0
+
+label0 = NP.zeros((T,), dtype=NP.float)
+label0[0] = labelweight
+
+label1 = NP.zeros((T,), dtype=NP.float)
+label1[1] = labelweight
+
 zlabels = []
 for wi in w:
     if(wi == 0):
-        zlabels.append(NP.array([5, 0, 0], dtype=NP.float))
+        zlabels.append(label0)
     elif(wi == 1):
-        zlabels.append(NP.array([0, 5, 0], dtype=NP.float))
+        zlabels.append(label1)
     else:
         zlabels.append(None)
         
