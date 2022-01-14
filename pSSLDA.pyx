@@ -13,7 +13,7 @@ David Newman, Arthur Asuncion, Padhraic Smyth, Max Welling
 Distributed Algorithms for Topic Models, JMLR 2009
 """
 import multiprocessing as MP
-import cPickle as CP
+import _pickle as CP # replaces cPickle in python3
 
 import numpy as NP
 import numpy.random as NPR
@@ -25,6 +25,8 @@ FTYPE = NP.float
 ctypedef NP.float_t FTYPE_t
 
 import FastLDA as FLDA
+
+NP.import_array() #prevent segfault
 
 # We're only drawing P values from this interval,
 # so does not need to be that large...
