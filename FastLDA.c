@@ -333,8 +333,9 @@ static PyObject* onlineInit(PyObject* self, PyObject* args, PyObject* keywds)
   // Get dimensionality info
   int T = PyArray_DIM(beta,0);
   int W = PyArray_DIM(beta,1);
-  int N = PyArray_DIM(w,0);
-  int D = PyInt_AsLong(PyArray_Max(d,NPY_MAXDIMS,NULL)) + 1;
+  int N = PyArray_DIM(w,0);  
+  //update for py3:
+  int D = PyLong_AsLong(PyArray_Max(d,NPY_MAXDIMS,NULL)) + 1;
 
   // Pre-calculate beta sums
   PyArrayObject* betasum = (PyArrayObject*) PyArray_Sum(beta,1,
@@ -1004,28 +1005,47 @@ PyMethodDef methods[] =
     {"standardGibbs", (PyCFunction) standardGibbs, 
      METH_VARARGS | METH_KEYWORDS, 
      "Take a single in-place standard LDA Gibbs sample"},
-    {"onlineInit", (PyCFunction) onlineInit, 
-     METH_KEYWORDS, "Do online LDA z-initialization"},
+    {"onlineInit", (PyCFunctionWithKeywords) onlineInit, //PyCFunction ?
+    // METH_KEYWORDS, "Do online LDA z-initialization"}, //Bad flag error
+     METH_VARARGS | METH_KEYWORDS, //SegFault
+    // METH_VARARGS, //SegFault
+    // METH_FASTCALL,
+     "Do online LDA z-initialization"},
     {"expectedCountMatrices", (PyCFunction) expectedCountMatrices, 
-     METH_KEYWORDS, 
+     //     METH_KEYWORDS, 
+     METH_VARARGS | METH_KEYWORDS, 
      "Construct 'expected' nw/nd count matrices from relaxed z-assignments"},
     {"countMatrices", (PyCFunction) countMatrices, 
-     METH_KEYWORDS, "Construct nw/nd count matrices"},
+     //     METH_KEYWORDS, "Construct nw/nd count matrices"},
+     METH_VARARGS | METH_KEYWORDS, "Construct nw/nd count matrices"},
     {"mapPhiTheta", (PyCFunction) mapPhiTheta,
-     METH_KEYWORDS, "MAP estimate of phi/theta from expected count matrices"},
+	//     METH_KEYWORDS, "MAP estimate of phi/theta from expected count matrices"},
+     METH_VARARGS |  METH_KEYWORDS, "MAP estimate of phi/theta from expected count matrices"},
     {"estPhiTheta", (PyCFunction) estPhiTheta,
-     METH_KEYWORDS, "Estimate phi/theta from count matrices"},
+	//     METH_KEYWORDS, "Estimate phi/theta from count matrices"},
+     METH_VARARGS | METH_KEYWORDS, "Estimate phi/theta from count matrices"},
     {"perplexity", (PyCFunction) perplexity,
-     METH_KEYWORDS, "Calc per-word perplexity given phi/theta"},
+	//     METH_KEYWORDS, "Calc per-word perplexity given phi/theta"},
+     METH_VARARGS | METH_KEYWORDS, "Calc per-word perplexity given phi/theta"},
     {"ldaLoglike", (PyCFunction) ldaLoglike,
-     METH_KEYWORDS, "Calc LDA logike of (z,phi,theta) given (w,alpha,beta)"},
+	//     METH_KEYWORDS, "Calc LDA logike of (z,phi,theta) given (w,alpha,beta)"},
+     METH_VARARGS | METH_KEYWORDS, "Calc LDA logike of (z,phi,theta) given (w,alpha,beta)"},
     {NULL, NULL, 0, NULL}  // Is a 'sentinel' (?)
   };
 
 // This is a macro that does stuff for us (linkage, declaration, etc)
-PyMODINIT_FUNC 
-initFastLDA() // Passes method table to init our module
+//python3 compatible: 2 parts.
+static struct PyModuleDef FastLDA = {
+  PyModuleDef_HEAD_INIT,
+  "FastLDA", //module name
+  "python3-compatible version", //documentation
+  -1, //"-1 if the module keeps state in global variables"
+  methods
+};
+
+PyMODINIT_FUNC PyInit_FastLDA(void)
 {
-  (void) Py_InitModule("FastLDA", methods); 
-  import_array(); // Must do this to satisfy NumPy (!)
+  import_array(); //NumPy satisfaction DO NOT MOVE FROM FIRST LINE/HERE
+  return PyModule_Create(&FastLDA);
 }
+
