@@ -1,5 +1,4 @@
-PARALLEL SEMI-SUPERVISED LDA (pSSLDA)
-Version 0.1
+# PARALLEL SEMI-SUPERVISED LDA (pSSLDA)
 
 David Andrzejewski (andrzeje@cs.wisc.edu)
 Department of Computer Sciences
@@ -17,46 +16,45 @@ This code can also be used to do parallel inference for "standard"
 LDA.
 
 The implementation consists of Python extension modules written in C
-and Cython.
+and Cython. Hannah Devinney ([hdevinney](https://github.com/hdevinney)) migrated the code to be Python3-compatible.
 
 
-
-BUILD/INSTALL
+## BUILD/INSTALL
 
 Building this module requires Python, NumPy, Cython, and a C compiler.
 From the command-line, do:
 
-% python setup.py install
+`% python setup.py install`
 
 (Note that if things are installed to non-standard locations, you may
 need to make the appropriate changes in setup.py)
 
 There is a simple example scipt showing how to use pSSLDA:
 
-% python example/example.py
+`% python example/example_py3.py`
 
 
 
-LOCAL INSTALL
+## LOCAL INSTALL
 
 If you do not have write access to your Python installation directories,
 you will need to tell setup.py to install this module somewhere else.
 For example:
 
-% python setup.py install --prefix=~/local
+`% python setup.py install --prefix=~/local`
 
 will install the module under a subdirectory of your home directory called 
 "local".
 
 It may then be necessary to let Python know where that is by setting
-the PYTHONPATH environment variable (e.g., in .bashrc or .cshrc).  For
+the `PYTHONPATH` environment variable (e.g., in `.bashrc` or `.cshrc`).  For
 our example this might involve adding something like the line:
 
-setenv PYTHONPATH ~/local/lib/python2.5/site-packages
+`setenv PYTHONPATH ~/local/lib/python2.5/site-packages`
 
 
 
-HOW TO USE
+## HOW TO USE
 
 The commenting in the example.py script explains the meanings and
 types of all input and return arguments.  The P parameter determines
@@ -65,7 +63,7 @@ than the number of available cores is probably inadvisable.
 
 
 
-LICENSE
+## LICENSE
 
 This software is open-source, released under the terms of the GNU
 General Public License version 3, or any later version of the GPL (see
@@ -73,7 +71,7 @@ LICENSE).
 
 
 
-REFERENCES
+## REFERENCES
 
 [1] Andrzejewski, D. and Zhu, X. (2009).  Latent Dirichlet Allocation
 with Topic-in-Set Knowledge. NAACL 2009 Workshop on Semi-supervised
@@ -89,5 +87,5 @@ Algorithms for Topic Models. Journal of Machine Learning Research
 
 
 
-VERSION HISTORY
+### VERSION HISTORY
 0.1     Initial release
