@@ -15,6 +15,8 @@ Distributed Algorithms for Topic Models, JMLR 2009
 import multiprocessing as MP
 import _pickle as CP # replaces cPickle in python3
 
+import pickle
+
 import numpy as NP
 import numpy.random as NPR
 
@@ -39,7 +41,7 @@ def getZ(pindices,allconn,finalz):
     for myconn in allconn:
         myconn.send('GETZ')
     for (pidx,myconn) in zip(pindices,allconn):
-        finalz[pidx] = NP.loads(myconn.recv())
+        finalz[pidx] = pickle.loads(myconn.recv())
 
 def trainsetPerplexity(NP.ndarray[NP.int_t, ndim=1] w,
                        NP.ndarray[NP.int_t, ndim=1] d,
@@ -187,7 +189,7 @@ def infer(NP.ndarray[NP.int_t, ndim=1] w,
         for (myconn,localnw) in zip(allconn,localnws):
             myconn.send((globalnw - localnw).dumps())
         # Collect results
-        localnws = [NP.loads(myconn.recv()) for myconn in allconn]
+        localnws = [pickle.loads(myconn.recv()) for myconn in allconn]
         # Re-calculate globalnw
         globalnw = NP.zeros(localnws[0].shape,dtype=NP.int)
         for localnw in localnws:
@@ -246,7 +248,7 @@ class Sampler(MP.Process):
                 break
             else:
                 # Else assume we have been passed globalnd, run inference
-                globalnw = NP.loads(recval)
+                globalnw = pickle.loads(recval)
                 if(self.zlabels == None):
                     # Standard LDA
                     FLDA.standardGibbs(self.w,self.d,self.z,
